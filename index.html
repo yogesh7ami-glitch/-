@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>વાંકાનેર શાળા - સ્માર્ટ હાજરી</title>
+    <style>
+        :root { --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; --blue: #3498db; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 5px; }
+        .container { width: 98vw; margin: auto; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        
+        .no-print { text-align: center; margin-bottom: 10px; background: #eef2f3; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
+        .tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
+        .tabs button { flex: 1; min-width: 100px; padding: 12px 8px; cursor: pointer; border: none; font-weight: bold; border-radius: 4px; font-size: 14px; }
+        .active-tab { background: var(--primary); color: white; }
+        
+        .panel { display: none; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .active-panel { display: block; }
+
+        /* મોબાઈલ માટે ખાસ વર્ટિકલ લેઆઉટ */
+        .compact-form { display: flex; flex-direction: column; align-items: stretch; gap: 10px; background: #fff; padding: 15px; border: 1px solid #eee; margin-bottom: 15px; }
+        
+        /* કેટેગરી ગ્રુપને મોબાઈલમાં લાઈન વાઈઝ કરવા માટે */
+        .cat-group { display: flex; align-items: center; justify-content: space-between; border: 1px solid #ccc; padding: 10px; border-radius: 6px; background: #f9f9f9; }
+        .cat-label { font-weight: bold; font-size: 14px; color: #333; min-width: 40px; }
+        
+        .ref-val { font-size: 15px; color: #d35400; font-weight: bold; width: 50px; text-align: center; background: #eee; padding: 4px; border-radius: 4px; }
+        input[type="number"] { width: 60px; border: 2px solid #aaa; text-align: center; font-size: 16px; padding: 8px; border-radius: 4px; background: #fffbe6; }
+        
+        select { width: 100%; padding: 12px; font-size: 16px; font-weight: bold; border: 2px solid var(--blue); border-radius: 6px; margin-bottom: 10px; }
+
+        /* બટન્સ સેટિંગ્સ */
+        .btn-container { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .btn { padding: 15px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; font-size: 16px; text-transform: uppercase; }
+        .btn-save { background: var(--success); width: 100%; }
+        .btn-reset { background: var(--danger); width: 100%; }
+        .btn-print { background: var(--blue); width: 100%; margin-top: 15px; }
+
+        /* ટેબલ સેટિંગ્સ */
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px; }
+        th, td { border: 1px solid #000; text-align: center; padding: 4px; height: 35px; word-wrap: break-word; }
+        th { background: #f2f2f2; font-size: 9px; }
+        td { font-size: 10px; font-weight: bold; }
+        .total-bg { background: #e8f4fd; }
+        .grand-total { background: #fcf3cf; height: 45px; }
+
+        #msgBox { display: none; padding: 12px; margin: 10px 0; border-radius: 6px; font-weight: bold; text-align: center; position: sticky; top: 10px; z-index: 100; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+
+        @media print {
+            .no-print { display: none; }
+            .btn-print { display: none; } /* પ્રિન્ટ કરતી વખતે આ બટન છપાશે નહીં */
+            .container { width: 100%; padding: 0; }
+            @page { size: A4 landscape; margin: 0.3cm; }
+            td { height: 40px; font-size: 11px; }
+        }
+
+        /* ટેબ્લેટ કે લેપટોપ માટે હોરિઝોન્ટલ લેઆઉટ */
+        @media (min-width: 768px) {
+            .compact-form { flex-direction: row; justify-content: center; }
+            select { width: auto; }
+            .btn-save { width: auto; }
+            .btn-container { flex-direction: row; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="no-print">
+        <h3 style="margin: 5px 0;">પ્રાથમિક શાળા વાંકાનેર - દૈનિક હાજરી</h3>
+        <div class="tabs">
+            <button onclick="showPanel(1)" class="active-tab">1. સેટઅપ</button>
+            <button onclick="showPanel(2)">2. હાજરી</button>
+            <button onclick="showPanel(3)">3. રિપોર્ટ</button>
+        </div>
+        <div id="msgBox"></div>
+    </div>
+
+    <div id="panel1" class="panel active-panel">
+        <div class="compact-form">
+            <select id="regClass">
+                <option value="">ધોરણ પસંદ કરો</option>
+                <option>બાલવાટિકા</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+                <option>6A</option><option>6B</option><option>7A</option><option>7B</option><option>8A</option><option>8B</option>
+            </select>
+            <div class="cat-group"><span class="cat-label">SC:</span> <div><input type="number" id="rb_sc" placeholder="કુ"> <input type="number" id="rg_sc" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">ST:</span> <div><input type="number" id="rb_st" placeholder="કુ"> <input type="number" id="rg_st" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">OBC:</span> <div><input type="number" id="rb_obc" placeholder="કુ"> <input type="number" id="rg_obc" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">GEN:</span> <div><input type="number" id="rb_gen" placeholder="કુ"> <input type="number" id="rg_gen" placeholder="ક"></div></div>
+            <button class="btn btn-save" onclick="saveData('reg')">રજીસ્ટર સંખ્યા સેવ કરો</button>
+        </div>
+        <button class="btn btn-reset" onclick="resetAll()">બધો ડેટા ક્લિયર કરો</button>
+    </div>
+
+    <div id="panel2" class="panel">
+        <div style="margin-bottom: 15px;">
+            <select id="dayClass" onchange="autoFillAttendance()">
+                <option value="">વર્ગ પસંદ કરો</option>
+                <option>બાલવાટિકા</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+                <option>6A</option><option>6B</option><option>7A</option><option>7B</option><option>8A</option><option>8B</option>
+            </select>
+        </div>
+
+        <h4 style="color: #d35400; margin: 5px 0;">1. રજીસ્ટર સંખ્યા (માત્ર જોવા માટે):</h4>
+        <div class="compact-form" style="background: #fff5eb; border: 1px solid #ffd1a1;">
+            <div class="cat-group"><span class="cat-label">SC:</span> <div><span id="ref_rb_sc" class="ref-val">0</span> <span id="ref_rg_sc" class="ref-val">0</span></div></div>
+            <div class="cat-group"><span class="cat-label">ST:</span> <div><span id="ref_rb_st" class="ref-val">0</span> <span id="ref_rg_st" class="ref-val">0</span></div></div>
+            <div class="cat-group"><span class="cat-label">OBC:</span> <div><span id="ref_rb_obc" class="ref-val">0</span> <span id="ref_rg_obc" class="ref-val">0</span></div></div>
+            <div class="cat-group"><span class="cat-label">GEN:</span> <div><span id="ref_rb_gen" class="ref-val">0</span> <span id="ref_rg_gen" class="ref-val">0</span></div></div>
+        </div>
+
+        <h4 style="color: var(--blue); margin: 5px 0;">2. હાજર સંખ્યા:</h4>
+        <div class="compact-form" style="background: #eef7ff;">
+            <div class="cat-group"><span class="cat-label">SC:</span> <div><input type="number" id="ab_sc" placeholder="કુ"> <input type="number" id="ag_sc" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">ST:</span> <div><input type="number" id="ab_st" placeholder="કુ"> <input type="number" id="ag_st" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">OBC:</span> <div><input type="number" id="ab_obc" placeholder="કુ"> <input type="number" id="ag_obc" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">GEN:</span> <div><input type="number" id="ab_gen" placeholder="કુ"> <input type="number" id="ag_gen" placeholder="ક"></div></div>
+        </div>
+
+        <h4 style="color: var(--success); margin: 5px 0;">3. ભોજનની સંખ્યા:</h4>
+        <div class="compact-form" style="background: #f0fff4;">
+            <div class="cat-group"><span class="cat-label">SC:</span> <div><input type="number" id="mb_sc" placeholder="કુ"> <input type="number" id="mg_sc" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">ST:</span> <div><input type="number" id="mb_st" placeholder="કુ"> <input type="number" id="mg_st" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">OBC:</span> <div><input type="number" id="mb_obc" placeholder="કુ"> <input type="number" id="mg_obc" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">GEN:</span> <div><input type="number" id="mb_gen" placeholder="કુ"> <input type="number" id="mg_gen" placeholder="ક"></div></div>
+        </div>
+
+        <button class="btn btn-save" style="background:var(--blue); margin-top: 10px;" onclick="saveData('day')">હાજરી સબમિટ કરો</button>
+    </div>
+
+    <div id="panel3" class="panel">
+        <h2 style="text-align: center; margin: 0; font-size: 18px;">દૈનિક હાજરી - પ્રાથમિક શાળા વાંકાનેર</h2>
+        <p style="text-align: center; margin: 5px;">તારીખ: <span id="curDate"></span></p>
+        
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th rowspan="3" style="width: 50px;">ધોરણ</th>
+                        <th colspan="11">રજીસ્ટર સંખ્યા</th>
+                        <th colspan="11">હાજર સંખ્યા</th>
+                        <th colspan="11">ભોજન સંખ્યા</th>
+                        <th rowspan="3" style="width: 60px;">સહી</th>
+                    </tr>
+                    <tr>
+                        <th colspan="2">SC</th><th colspan="2">ST</th><th colspan="2">OBC</th><th colspan="2">GEN</th><th colspan="3" class="total-bg">કુલ</th>
+                        <th colspan="2">SC</th><th colspan="2">ST</th><th colspan="2">OBC</th><th colspan="2">GEN</th><th colspan="3" class="total-bg">કુલ</th>
+                        <th colspan="2">SC</th><th colspan="2">ST</th><th colspan="2">OBC</th><th colspan="2">GEN</th><th colspan="3" class="total-bg">કુલ</th>
+                    </tr>
+                    <tr>
+                        <th>કુ</th><th>ક</th><th>કુ</th><th>ક</th><th>કુ</th><th>ક</th><th>કુ</th><th>ક</th><th>કુ</th><th>ક</th><th>કુલ</th>
+                        <th>કુ</th><th>ક</th><th>કુ</th><th>ક</th><th>કુ</th><th>ક</th><th>કુ</th><th>ક</th><th>કુ</th><th>ક</th><th>કુલ</th>
+                        <th>કુ</th><th>ક</th><th>કુ</th><th>ક</th><th>કુ</th><th>ક</th><th>કુ</th><th>ક</th><th>કુ</th><th>ક</th><th>કુલ</th>
+                    </tr>
+                </thead>
+                <tbody id="reportContent"></tbody>
+            </table>
+        </div>
+        <button class="btn btn-print" onclick="window.print()">A4 Landscape પ્રિન્ટ</button>
+    </div>
+</div>
+
+<script>
+    const classes = ["બાલવાટિકા", "1", "2", "3", "4", "5", "6A", "6B", "7A", "7B", "8A", "8B"];
+    let store = JSON.parse(localStorage.getItem('schoolDB_MobileV1')) || {};
+    
+    const todayStr = new Date().toISOString().split('T')[0];
+    let lastSavedDate = localStorage.getItem('attendance_last_date');
+
+    if (lastSavedDate !== todayStr) {
+        classes.forEach(cls => {
+            if (store[cls]) {
+                const cats = ['sc', 'st', 'obc', 'gen'];
+                cats.forEach(c => {
+                    store[cls]['ab_'+c] = 0;
+                    store[cls]['ag_'+c] = 0;
+                    store[cls]['mb_'+c] = 0;
+                    store[cls]['mg_'+c] = 0;
+                });
+            }
+        });
+        localStorage.setItem('schoolDB_MobileV1', JSON.stringify(store));
+        localStorage.setItem('attendance_last_date', todayStr);
+    }
+
+    function showPanel(n) {
+        document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active-panel', i+1 === n));
+        document.querySelectorAll('.tabs button').forEach((b, i) => b.classList.toggle('active-tab', i+1 === n));
+        if(n === 3) renderReport();
+    }
+
+    function autoFillAttendance() {
+        let cls = document.getElementById('dayClass').value;
+        const cats = ['sc', 'st', 'obc', 'gen'];
+        if(cls && store[cls]) {
+            cats.forEach(c => {
+                let rb = store[cls]['rb_'+c] || 0;
+                let rg = store[cls]['rg_'+c] || 0;
+                document.getElementById('ref_rb_'+c).innerText = rb;
+                document.getElementById('ref_rg_'+c).innerText = rg;
+                
+                document.getElementById('ab_'+c).value = store[cls]['ab_'+c] !== undefined && store[cls]['ab_'+c] !== 0 ? store[cls]['ab_'+c] : rb;
+                document.getElementById('ag_'+c).value = store[cls]['ag_'+c] !== undefined && store[cls]['ag_'+c] !== 0 ? store[cls]['ag_'+c] : rg;
+                document.getElementById('mb_'+c).value = store[cls]['mb_'+c] !== undefined && store[cls]['mb_'+c] !== 0 ? store[cls]['mb_'+c] : rb;
+                document.getElementById('mg_'+c).value = store[cls]['mg_'+c] !== undefined && store[cls]['mg_'+c] !== 0 ? store[cls]['mg_'+c] : rg;
+            });
+        } else {
+            cats.forEach(c => {
+                document.getElementById('ref_rb_'+c).innerText = 0;
+                document.getElementById('ref_rg_'+c).innerText = 0;
+                document.getElementById('ab_'+c).value = '';
+                document.getElementById('ag_'+c).value = '';
+                document.getElementById('mb_'+c).value = '';
+                document.getElementById('mg_'+c).value = '';
+            });
+        }
+    }
+
+    function showMsg(text, isError) {
+        const box = document.getElementById('msgBox');
+        box.innerText = text;
+        box.className = isError ? 'error' : 'success';
+        box.style.display = 'block';
+        window.scrollTo(0,0);
+        setTimeout(() => { box.style.display = 'none'; }, 4000);
+    }
+
+    function saveData(type) {
+        let cls = type === 'reg' ? document.getElementById('regClass').value : document.getElementById('dayClass').value;
+        if(!cls) return alert("ધોરણ પસંદ કરો");
+        
+        if(!store[cls]) store[cls] = {};
+        const cats = ['sc', 'st', 'obc', 'gen'];
+
+        if(type === 'day') {
+            for(let c of cats) {
+                let r_boy = store[cls]['rb_'+c] || 0, r_girl = store[cls]['rg_'+c] || 0;
+                let a_boy = parseInt(document.getElementById('ab_'+c).value) || 0, a_girl = parseInt(document.getElementById('ag_'+c).value) || 0;
+                if(a_boy > r_boy || a_girl > r_girl) {
+                    showMsg(`ભૂલ: ${cls} માં ${c.toUpperCase()} ની હાજરી રજીસ્ટર કરતા વધારે છે!`, true);
+                    return;
+                }
+            }
+        }
+
+        cats.forEach(c => {
+            if(type === 'reg') {
+                store[cls]['rb_'+c] = parseInt(document.getElementById('rb_'+c).value) || 0;
+                store[cls]['rg_'+c] = parseInt(document.getElementById('rg_'+c).value) || 0;
+            } else {
+                store[cls]['ab_'+c] = parseInt(document.getElementById('ab_'+c).value) || 0;
+                store[cls]['ag_'+c] = parseInt(document.getElementById('ag_'+c).value) || 0;
+                store[cls]['mb_'+c] = parseInt(document.getElementById('mb_'+c).value) || 0;
+                store[cls]['mg_'+c] = parseInt(document.getElementById('mg_'+c).value) || 0;
+            }
+        });
+
+        localStorage.setItem('schoolDB_MobileV1', JSON.stringify(store));
+        localStorage.setItem('attendance_last_date', todayStr);
+        showMsg(cls + " ડેટા સેવ થયો.", false);
+    }
+
+    function renderReport() {
+        document.getElementById('curDate').innerText = new Date().toLocaleDateString('gu-IN');
+        let html = '';
+        let gt = { rb:0, rg:0, ab:0, ag:0, mb:0, mg:0 };
+
+        classes.forEach(cls => {
+            let d = store[cls] || {};
+            const sum = (p) => (d[p+'_sc']||0)+(d[p+'_st']||0)+(d[p+'_obc']||0)+(d[p+'_gen']||0);
+            let rb = sum('rb'), rg = sum('rg'), ab = sum('ab'), ag = sum('ag'), mb = sum('mb'), mg = sum('mg');
+
+            html += `<tr>
+                <td><b>${cls}</b></td>
+                <td>${d.rb_sc||0}</td><td>${d.rg_sc||0}</td><td>${d.rb_st||0}</td><td>${d.rg_st||0}</td><td>${d.rb_obc||0}</td><td>${d.rg_obc||0}</td><td>${d.rb_gen||0}</td><td>${d.rg_gen||0}</td><td class="total-bg">${rb}</td><td class="total-bg">${rg}</td><td class="total-bg">${rb+rg}</td>
+                <td>${d.ab_sc||0}</td><td>${d.ag_sc||0}</td><td>${d.ab_st||0}</td><td>${d.ag_st||0}</td><td>${d.ab_obc||0}</td><td>${d.ag_obc||0}</td><td>${d.ab_gen||0}</td><td>${d.ag_gen||0}</td><td class="total-bg">${ab}</td><td class="total-bg">${ag}</td><td class="total-bg">${ab+ag}</td>
+                <td>${d.mb_sc||0}</td><td>${d.mg_sc||0}</td><td>${d.mb_st||0}</td><td>${d.mg_st||0}</td><td>${d.mb_obc||0}</td><td>${d.mg_obc||0}</td><td>${d.mb_gen||0}</td><td>${d.mg_gen||0}</td><td class="total-bg">${mb}</td><td class="total-bg">${mg}</td><td class="total-bg">${mb+mg}</td>
+                <td></td>
+            </tr>`;
+            gt.rb += rb; gt.rg += rg; gt.ab += ab; gt.ag += ag; gt.mb += mb; gt.mg += mg;
+        });
+
+        html += `<tr class="grand-total">
+            <td>કુલ</td><td colspan="8">સરવાળો</td><td>${gt.rb}</td><td>${gt.rg}</td><td>${gt.rb+gt.rg}</td>
+            <td colspan="8">--</td><td>${gt.ab}</td><td>${gt.ag}</td><td>${gt.ab+gt.ag}</td>
+            <td colspan="8">--</td><td>${gt.mb}</td><td>${gt.mg}</td><td>${gt.mb+gt.mg}</td>
+            <td></td>
+        </tr>`;
+        document.getElementById('reportContent').innerHTML = html;
+    }
+
+    function resetAll() {
+        if(confirm("શું તમે ખરેખર બધો ડેટા સાફ કરવા માંગો છો?")) {
+            localStorage.removeItem('schoolDB_MobileV1');
+            localStorage.removeItem('attendance_last_date');
+            store = {}; location.reload();
+        }
+    }
+</script>
+</body>
+</html>
