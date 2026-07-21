@@ -50,13 +50,12 @@
 
         @media print {
             .no-print { display: none; }
-            .btn-print { display: none; } /* પ્રિન્ટ કરતી વખતે આ બટન છપાશે નહીં */
+            .btn-print { display: none; }
             .container { width: 100%; padding: 0; }
             @page { size: A4 landscape; margin: 0.3cm; }
             td { height: 40px; font-size: 11px; }
         }
 
-        /* ટેબ્લેટ કે લેપટોપ માટે હોરિઝોન્ટલ લેઆઉટ */
         @media (min-width: 768px) {
             .compact-form { flex-direction: row; justify-content: center; }
             select { width: auto; }
@@ -162,36 +161,75 @@
     </div>
 </div>
 
-<script>
+<!-- Firebase SDK Modules -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // 1. અહીં તમારા Firebase Console માંથી મળેલ Config વિગતો બદલો
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+
+    // Firebase Initialize કરો
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
     const classes = ["બાલવાટિકા", "1", "2", "3", "4", "5", "6A", "6B", "7A", "7B", "8A", "8B"];
-    let store = JSON.parse(localStorage.getItem('schoolDB_MobileV1')) || {};
-    
+    let store = {};
+
     const todayStr = new Date().toISOString().split('T')[0];
-    let lastSavedDate = localStorage.getItem('attendance_last_date');
 
-    if (lastSavedDate !== todayStr) {
-        classes.forEach(cls => {
-            if (store[cls]) {
-                const cats = ['sc', 'st', 'obc', 'gen'];
-                cats.forEach(c => {
-                    store[cls]['ab_'+c] = 0;
-                    store[cls]['ag_'+c] = 0;
-                    store[cls]['mb_'+c] = 0;
-                    store[cls]['mg_'+c] = 0;
+    // ૨. Firebase માંથી રિયલ-ટાઈમ ડેટા ફેચ કરો (બધા જ ડિવાઈસ માટે સિંક રહેશે)
+    const schoolDbRef = ref(db, 'schoolAttendanceDB');
+    onValue(schoolDbRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            store = data.store || {};
+            let lastSavedDate = data.lastDate || "";
+
+            // જો નવી તારીખ હોય તો જૂની દૈનિક હાજરી રીસેટ થશે પરંતુ રજીસ્ટર સંખ્યા રહેશે
+            if (lastSavedDate !== todayStr) {
+                classes.forEach(cls => {
+                    if (store[cls]) {
+                        const cats = ['sc', 'st', 'obc', 'gen'];
+                        cats.forEach(c => {
+                            store[cls]['ab_'+c] = 0;
+                            store[cls]['ag_'+c] = 0;
+                            store[cls]['mb_'+c] = 0;
+                            store[cls]['mg_'+c] = 0;
+                        });
+                    }
                 });
+                // નવી તારીખનો ડેટા Firebase પર અપડેટ કરો
+                set(ref(db, 'schoolAttendanceDB'), { store: store, lastDate: todayStr });
             }
-        });
-        localStorage.setItem('schoolDB_MobileV1', JSON.stringify(store));
-        localStorage.setItem('attendance_last_date', todayStr);
-    }
+        } else {
+            store = {};
+        }
 
-    function showPanel(n) {
+        // વર્તમાન ઓપન પેનલ અને ફોર્મ ઓટો-અપડેટ કરો
+        autoFillAttendance();
+        let activePanel = document.querySelector('.panel.active-panel');
+        if (activePanel && activePanel.id === 'panel3') {
+            renderReport();
+        }
+    });
+
+    // JavaScript વિન્ડો સ્કોપમાં ફંક્શન્સ ગ્લોબલ બનાવો
+    window.showPanel = function(n) {
         document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active-panel', i+1 === n));
         document.querySelectorAll('.tabs button').forEach((b, i) => b.classList.toggle('active-tab', i+1 === n));
         if(n === 3) renderReport();
-    }
+    };
 
-    function autoFillAttendance() {
+    window.autoFillAttendance = function() {
         let cls = document.getElementById('dayClass').value;
         const cats = ['sc', 'st', 'obc', 'gen'];
         if(cls && store[cls]) {
@@ -216,7 +254,7 @@
                 document.getElementById('mg_'+c).value = '';
             });
         }
-    }
+    };
 
     function showMsg(text, isError) {
         const box = document.getElementById('msgBox');
@@ -227,7 +265,8 @@
         setTimeout(() => { box.style.display = 'none'; }, 4000);
     }
 
-    function saveData(type) {
+    // ૩. Firebase માં ડેટા સેવ કરવાનો કોડ
+    window.saveData = function(type) {
         let cls = type === 'reg' ? document.getElementById('regClass').value : document.getElementById('dayClass').value;
         if(!cls) return alert("ધોરણ પસંદ કરો");
         
@@ -257,12 +296,18 @@
             }
         });
 
-        localStorage.setItem('schoolDB_MobileV1', JSON.stringify(store));
-        localStorage.setItem('attendance_last_date', todayStr);
-        showMsg(cls + " ડેટા સેવ થયો.", false);
-    }
+        // Firebase Realtime Database માં ઓનલાઈન અપડેટ કરો
+        set(ref(db, 'schoolAttendanceDB'), {
+            store: store,
+            lastDate: todayStr
+        }).then(() => {
+            showMsg(cls + " ડેટા સર્વર પર સફળતાપૂર્વક સેવ થયો.", false);
+        }).catch((err) => {
+            showMsg("ડેટા સેવ કરવામાં ભૂલ થઈ: " + err.message, true);
+        });
+    };
 
-    function renderReport() {
+    window.renderReport = function() {
         document.getElementById('curDate').innerText = new Date().toLocaleDateString('gu-IN');
         let html = '';
         let gt = { rb:0, rg:0, ab:0, ag:0, mb:0, mg:0 };
@@ -289,15 +334,18 @@
             <td></td>
         </tr>`;
         document.getElementById('reportContent').innerHTML = html;
-    }
+    };
 
-    function resetAll() {
-        if(confirm("શું તમે ખરેખર બધો ડેટા સાફ કરવા માંગો છો?")) {
-            localStorage.removeItem('schoolDB_MobileV1');
-            localStorage.removeItem('attendance_last_date');
-            store = {}; location.reload();
+    // ૪. Firebase માંથી ડેટા સાફ કરો (Reset)
+    window.resetAll = function() {
+        if(confirm("શું તમે ખરેખર બધો ડેટા સાફ કરવા માંગો છો? આનાથી ઓનલાઈન સર્વર ડેટા પણ ડીલીટ થઈ જશે.")) {
+            remove(ref(db, 'schoolAttendanceDB')).then(() => {
+                store = {};
+                alert("બધો ડેટા સર્વર પરથી સાફ થઈ ગયો છે.");
+                location.reload();
+            });
         }
-    }
+    };
 </script>
 </body>
 </html>
