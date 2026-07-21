@@ -157,19 +157,33 @@
     </div>
 </div>
 
-<!-- Firebase SDK Modules -->
+<!-- Standard Script: Tab Switching logic loads immediately -->
+<script>
+    function showPanel(n) {
+        document.querySelectorAll('.panel').forEach(function(p, i) {
+            p.classList.toggle('active-panel', i + 1 === n);
+        });
+        document.querySelectorAll('.tabs button').forEach(function(b, i) {
+            b.classList.toggle('active-tab', i + 1 === n);
+        });
+        if (n === 3 && typeof window.renderReport === 'function') {
+            window.renderReport();
+        }
+    }
+</script>
+
+<!-- Firebase Module Script -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyCaweNrrE1aL1i1Dlh_r5saUw2MrQoWzsE",
         authDomain: "vankaner-dainik.firebaseapp.com",
         databaseURL: "https://vankaner-dainik-default-rtdb.firebaseio.com/",
         projectId: "vankaner-dainik",
         storageBucket: "vankaner-dainik.firebasestorage.app",
-        messagingSenderId: "753365478185", // અહીં કૉમા (,) મુકવામાં આવ્યો છે
+        messagingSenderId: "753365478185",
         appId: "1:753365478185:web:7a9a3a56bfb29cacfbe538"
     };
 
@@ -178,10 +192,8 @@
 
     const classes = ["બાલવાટિકા", "1", "2", "3", "4", "5", "6A", "6B", "7A", "7B", "8A", "8B"];
     let store = {};
-
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // Firebase માંથી રિયલ-ટાઈમ ડેટા મેળવવો
     const schoolDbRef = ref(db, 'schoolAttendanceDB');
     onValue(schoolDbRef, (snapshot) => {
         const data = snapshot.val();
@@ -207,18 +219,12 @@
             store = {};
         }
 
-        autoFillAttendance();
+        window.autoFillAttendance();
         let activePanel = document.querySelector('.panel.active-panel');
         if (activePanel && activePanel.id === 'panel3') {
-            renderReport();
+            window.renderReport();
         }
     });
-
-    window.showPanel = function(n) {
-        document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active-panel', i+1 === n));
-        document.querySelectorAll('.tabs button').forEach((b, i) => b.classList.toggle('active-tab', i+1 === n));
-        if(n === 3) renderReport();
-    };
 
     window.autoFillAttendance = function() {
         let cls = document.getElementById('dayClass').value;
