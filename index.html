@@ -17,10 +17,8 @@
         .panel { display: none; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
         .active-panel { display: block; }
 
-        /* મોબાઈલ માટે ખાસ વર્ટિકલ લેઆઉટ */
         .compact-form { display: flex; flex-direction: column; align-items: stretch; gap: 10px; background: #fff; padding: 15px; border: 1px solid #eee; margin-bottom: 15px; }
         
-        /* કેટેગરી ગ્રુપને મોબાઈલમાં લાઈન વાઈઝ કરવા માટે */
         .cat-group { display: flex; align-items: center; justify-content: space-between; border: 1px solid #ccc; padding: 10px; border-radius: 6px; background: #f9f9f9; }
         .cat-label { font-weight: bold; font-size: 14px; color: #333; min-width: 40px; }
         
@@ -29,14 +27,12 @@
         
         select { width: 100%; padding: 12px; font-size: 16px; font-weight: bold; border: 2px solid var(--blue); border-radius: 6px; margin-bottom: 10px; }
 
-        /* બટન્સ સેટિંગ્સ */
         .btn-container { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
         .btn { padding: 15px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; font-size: 16px; text-transform: uppercase; }
         .btn-save { background: var(--success); width: 100%; }
         .btn-reset { background: var(--danger); width: 100%; }
         .btn-print { background: var(--blue); width: 100%; margin-top: 15px; }
 
-        /* ટેબલ સેટિંગ્સ */
         table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px; }
         th, td { border: 1px solid #000; text-align: center; padding: 4px; height: 35px; word-wrap: break-word; }
         th { background: #f2f2f2; font-size: 9px; }
@@ -166,18 +162,17 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // 1. અહીં તમારા Firebase Console માંથી મળેલ Config વિગતો બદલો
+    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyCaweNrrE1aL1i1Dlh_r5saUw2MrQoWzsE",
         authDomain: "vankaner-dainik.firebaseapp.com",
         databaseURL: "https://vankaner-dainik-default-rtdb.firebaseio.com/",
         projectId: "vankaner-dainik",
         storageBucket: "vankaner-dainik.firebasestorage.app",
-        messagingSenderId: "753365478185"
+        messagingSenderId: "753365478185", // અહીં કૉમા (,) મુકવામાં આવ્યો છે
         appId: "1:753365478185:web:7a9a3a56bfb29cacfbe538"
     };
 
-    // Firebase Initialize કરો
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
@@ -186,7 +181,7 @@
 
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // ૨. Firebase માંથી રિયલ-ટાઈમ ડેટા ફેચ કરો (બધા જ ડિવાઈસ માટે સિંક રહેશે)
+    // Firebase માંથી રિયલ-ટાઈમ ડેટા મેળવવો
     const schoolDbRef = ref(db, 'schoolAttendanceDB');
     onValue(schoolDbRef, (snapshot) => {
         const data = snapshot.val();
@@ -194,7 +189,6 @@
             store = data.store || {};
             let lastSavedDate = data.lastDate || "";
 
-            // જો નવી તારીખ હોય તો જૂની દૈનિક હાજરી રીસેટ થશે પરંતુ રજીસ્ટર સંખ્યા રહેશે
             if (lastSavedDate !== todayStr) {
                 classes.forEach(cls => {
                     if (store[cls]) {
@@ -207,14 +201,12 @@
                         });
                     }
                 });
-                // નવી તારીખનો ડેટા Firebase પર અપડેટ કરો
                 set(ref(db, 'schoolAttendanceDB'), { store: store, lastDate: todayStr });
             }
         } else {
             store = {};
         }
 
-        // વર્તમાન ઓપન પેનલ અને ફોર્મ ઓટો-અપડેટ કરો
         autoFillAttendance();
         let activePanel = document.querySelector('.panel.active-panel');
         if (activePanel && activePanel.id === 'panel3') {
@@ -222,7 +214,6 @@
         }
     });
 
-    // JavaScript વિન્ડો સ્કોપમાં ફંક્શન્સ ગ્લોબલ બનાવો
     window.showPanel = function(n) {
         document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active-panel', i+1 === n));
         document.querySelectorAll('.tabs button').forEach((b, i) => b.classList.toggle('active-tab', i+1 === n));
@@ -265,7 +256,6 @@
         setTimeout(() => { box.style.display = 'none'; }, 4000);
     }
 
-    // ૩. Firebase માં ડેટા સેવ કરવાનો કોડ
     window.saveData = function(type) {
         let cls = type === 'reg' ? document.getElementById('regClass').value : document.getElementById('dayClass').value;
         if(!cls) return alert("ધોરણ પસંદ કરો");
@@ -296,7 +286,6 @@
             }
         });
 
-        // Firebase Realtime Database માં ઓનલાઈન અપડેટ કરો
         set(ref(db, 'schoolAttendanceDB'), {
             store: store,
             lastDate: todayStr
@@ -336,7 +325,6 @@
         document.getElementById('reportContent').innerHTML = html;
     };
 
-    // ૪. Firebase માંથી ડેટા સાફ કરો (Reset)
     window.resetAll = function() {
         if(confirm("શું તમે ખરેખર બધો ડેટા સાફ કરવા માંગો છો? આનાથી ઓનલાઈન સર્વર ડેટા પણ ડીલીટ થઈ જશે.")) {
             remove(ref(db, 'schoolAttendanceDB')).then(() => {
