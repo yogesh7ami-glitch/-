@@ -23,7 +23,7 @@
         .cat-label { font-weight: bold; font-size: 14px; color: #333; min-width: 40px; }
         
         .ref-val { font-size: 15px; color: #d35400; font-weight: bold; width: 50px; text-align: center; background: #eee; padding: 4px; border-radius: 4px; }
-        input[type="number"] { width: 60px; border: 2px solid #aaa; text-align: center; font-size: 16px; padding: 8px; border-radius: 4px; background: #fffbe6; }
+        input[type="number"], input[type="password"] { width: 60px; border: 2px solid #aaa; text-align: center; font-size: 16px; padding: 8px; border-radius: 4px; background: #fffbe6; }
         
         select { width: 100%; padding: 12px; font-size: 16px; font-weight: bold; border: 2px solid var(--blue); border-radius: 6px; margin-bottom: 10px; }
 
@@ -38,7 +38,10 @@
         th { background: #f2f2f2; font-size: 9px; }
         td { font-size: 10px; font-weight: bold; }
         .total-bg { background: #e8f4fd; }
+        .subtotal-row { background: #e2f0d9; font-weight: bold; }
         .grand-total { background: #fcf3cf; height: 45px; }
+
+        .live-total-box { background: #eef2f3; border: 2px dashed var(--blue); padding: 10px; margin-top: 10px; border-radius: 6px; font-weight: bold; text-align: center; font-size: 15px; }
 
         #msgBox { display: none; padding: 12px; margin: 10px 0; border-radius: 6px; font-weight: bold; text-align: center; position: sticky; top: 10px; z-index: 100; }
         .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
@@ -73,22 +76,40 @@
         <div id="msgBox"></div>
     </div>
 
+    <!-- Panel 1: Setup with Lock -->
     <div id="panel1" class="panel active-panel">
-        <div class="compact-form">
-            <select id="regClass">
-                <option value="">ધોરણ પસંદ કરો</option>
-                <option>બાલવાટિકા</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-                <option>6A</option><option>6B</option><option>7A</option><option>7B</option><option>8A</option><option>8B</option>
-            </select>
-            <div class="cat-group"><span class="cat-label">SC:</span> <div><input type="number" id="rb_sc" placeholder="કુ"> <input type="number" id="rg_sc" placeholder="ક"></div></div>
-            <div class="cat-group"><span class="cat-label">ST:</span> <div><input type="number" id="rb_st" placeholder="કુ"> <input type="number" id="rg_st" placeholder="ક"></div></div>
-            <div class="cat-group"><span class="cat-label">OBC:</span> <div><input type="number" id="rb_obc" placeholder="કુ"> <input type="number" id="rg_obc" placeholder="ક"></div></div>
-            <div class="cat-group"><span class="cat-label">GEN:</span> <div><input type="number" id="rb_gen" placeholder="કુ"> <input type="number" id="rg_gen" placeholder="ક"></div></div>
-            <button class="btn btn-save" onclick="saveData('reg')">રજીસ્ટર સંખ્યા સેવ કરો</button>
+        <div id="lockScreen" style="display: none; text-align: center; padding: 20px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 8px;">
+            <h4 style="margin: 0 0 10px 0; color: #856404;">🔒 સેટઅપ લોક થયેલ છે</h4>
+            <p style="margin-bottom: 10px; font-size: 14px;">ફેરફાર કરવા માટે પાસવર્ડ (PIN) દાખલ કરો:</p>
+            <input type="password" id="inputPin" maxlength="6" placeholder="PIN" style="width: 100px; font-size: 18px;">
+            <button class="btn btn-save" style="width: auto; padding: 8px 15px; margin-left: 5px;" onclick="unlockSetup()">અનલોક કરો</button>
         </div>
-        <button class="btn btn-reset" onclick="resetAll()">બધો ડેટા ક્લિયર કરો</button>
+
+        <div id="setupForm">
+            <div class="compact-form">
+                <select id="regClass">
+                    <option value="">ધોરણ પસંદ કરો</option>
+                    <option>બાલવાટિકા</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+                    <option>6A</option><option>6B</option><option>7A</option><option>7B</option><option>8A</option><option>8B</option>
+                </select>
+                <div class="cat-group"><span class="cat-label">SC:</span> <div><input type="number" id="rb_sc" placeholder="કુ"> <input type="number" id="rg_sc" placeholder="ક"></div></div>
+                <div class="cat-group"><span class="cat-label">ST:</span> <div><input type="number" id="rb_st" placeholder="કુ"> <input type="number" id="rg_st" placeholder="ક"></div></div>
+                <div class="cat-group"><span class="cat-label">OBC:</span> <div><input type="number" id="rb_obc" placeholder="કુ"> <input type="number" id="rg_obc" placeholder="ક"></div></div>
+                <div class="cat-group"><span class="cat-label">GEN:</span> <div><input type="number" id="rb_gen" placeholder="કુ"> <input type="number" id="rg_gen" placeholder="ક"></div></div>
+                <button class="btn btn-save" onclick="saveData('reg')">રજીસ્ટર સંખ્યા સેવ કરો</button>
+            </div>
+            
+            <div style="background: #eef2f3; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 15px;">
+                <span style="font-weight: bold; font-size: 14px;">સેટઅપ લોક પાસવર્ડ સેટ કરો: </span>
+                <input type="password" id="setPin" maxlength="6" placeholder="4 અંકનો પિન" style="width: 100px;">
+                <button class="btn btn-save" style="width: auto; padding: 8px 12px; background: var(--primary);" onclick="savePin()">પિન સેવ કરો</button>
+            </div>
+
+            <button class="btn btn-reset" onclick="resetAll()">બધો ડેટા ક્લિયર કરો</button>
+        </div>
     </div>
 
+    <!-- Panel 2: Attendance -->
     <div id="panel2" class="panel">
         <div style="margin-bottom: 15px;">
             <select id="dayClass" onchange="autoFillAttendance()">
@@ -108,23 +129,29 @@
 
         <h4 style="color: var(--blue); margin: 5px 0;">2. હાજર સંખ્યા:</h4>
         <div class="compact-form" style="background: #eef7ff;">
-            <div class="cat-group"><span class="cat-label">SC:</span> <div><input type="number" id="ab_sc" placeholder="કુ"> <input type="number" id="ag_sc" placeholder="ક"></div></div>
-            <div class="cat-group"><span class="cat-label">ST:</span> <div><input type="number" id="ab_st" placeholder="કુ"> <input type="number" id="ag_st" placeholder="ક"></div></div>
-            <div class="cat-group"><span class="cat-label">OBC:</span> <div><input type="number" id="ab_obc" placeholder="કુ"> <input type="number" id="ag_obc" placeholder="ક"></div></div>
-            <div class="cat-group"><span class="cat-label">GEN:</span> <div><input type="number" id="ab_gen" placeholder="કુ"> <input type="number" id="ag_gen" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">SC:</span> <div><input type="number" id="ab_sc" oninput="calcLiveTotals()" placeholder="કુ"> <input type="number" id="ag_sc" oninput="calcLiveTotals()" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">ST:</span> <div><input type="number" id="ab_st" oninput="calcLiveTotals()" placeholder="કુ"> <input type="number" id="ag_st" oninput="calcLiveTotals()" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">OBC:</span> <div><input type="number" id="ab_obc" oninput="calcLiveTotals()" placeholder="કુ"> <input type="number" id="ag_obc" oninput="calcLiveTotals()" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">GEN:</span> <div><input type="number" id="ab_gen" oninput="calcLiveTotals()" placeholder="કુ"> <input type="number" id="ag_gen" oninput="calcLiveTotals()" placeholder="ક"></div></div>
         </div>
 
         <h4 style="color: var(--success); margin: 5px 0;">3. ભોજનની સંખ્યા:</h4>
         <div class="compact-form" style="background: #f0fff4;">
-            <div class="cat-group"><span class="cat-label">SC:</span> <div><input type="number" id="mb_sc" placeholder="કુ"> <input type="number" id="mg_sc" placeholder="ક"></div></div>
-            <div class="cat-group"><span class="cat-label">ST:</span> <div><input type="number" id="mb_st" placeholder="કુ"> <input type="number" id="mg_st" placeholder="ક"></div></div>
-            <div class="cat-group"><span class="cat-label">OBC:</span> <div><input type="number" id="mb_obc" placeholder="કુ"> <input type="number" id="mg_obc" placeholder="ક"></div></div>
-            <div class="cat-group"><span class="cat-label">GEN:</span> <div><input type="number" id="mb_gen" placeholder="કુ"> <input type="number" id="mg_gen" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">SC:</span> <div><input type="number" id="mb_sc" oninput="calcLiveTotals()" placeholder="કુ"> <input type="number" id="mg_sc" oninput="calcLiveTotals()" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">ST:</span> <div><input type="number" id="mb_st" oninput="calcLiveTotals()" placeholder="કુ"> <input type="number" id="mg_st" oninput="calcLiveTotals()" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">OBC:</span> <div><input type="number" id="mb_obc" oninput="calcLiveTotals()" placeholder="કુ"> <input type="number" id="mg_obc" oninput="calcLiveTotals()" placeholder="ક"></div></div>
+            <div class="cat-group"><span class="cat-label">GEN:</span> <div><input type="number" id="mb_gen" oninput="calcLiveTotals()" placeholder="કુ"> <input type="number" id="mg_gen" oninput="calcLiveTotals()" placeholder="ક"></div></div>
+        </div>
+
+        <!-- આ વર્ગનો કુલ ડેટા -->
+        <div class="live-total-box">
+            આ વર્ગનું કુલ ➔ હાજર: <span id="classAttTotal" style="color:var(--blue);">0</span> | ભોજન: <span id="classMealTotal" style="color:var(--success);">0</span>
         </div>
 
         <button class="btn btn-save" style="background:var(--blue); margin-top: 10px;" onclick="saveData('day')">હાજરી સબમિટ કરો</button>
     </div>
 
+    <!-- Panel 3: Report -->
     <div id="panel3" class="panel">
         <h2 style="text-align: center; margin: 0; font-size: 18px;">દૈનિક હાજરી - પ્રાથમિક શાળા વાંકાનેર</h2>
         <p style="text-align: center; margin: 5px;">તારીખ: <span id="curDate"></span></p>
@@ -157,7 +184,7 @@
     </div>
 </div>
 
-<!-- Standard Script: Tab Switching logic loads immediately -->
+<!-- Standard Script -->
 <script>
     function showPanel(n) {
         document.querySelectorAll('.panel').forEach(function(p, i) {
@@ -190,8 +217,12 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const classes = ["બાલવાટિકા", "1", "2", "3", "4", "5", "6A", "6B", "7A", "7B", "8A", "8B"];
+    const classesPrimary = ["બાલવાટિકા", "1", "2", "3", "4", "5"];
+    const classesUpper = ["6A", "6B", "7A", "7B", "8A", "8B"];
+    const classes = [...classesPrimary, ...classesUpper];
+    
     let store = {};
+    let setupPin = "";
     const todayStr = new Date().toISOString().split('T')[0];
 
     const schoolDbRef = ref(db, 'schoolAttendanceDB');
@@ -199,6 +230,7 @@
         const data = snapshot.val();
         if (data) {
             store = data.store || {};
+            setupPin = data.pin || "";
             let lastSavedDate = data.lastDate || "";
 
             if (lastSavedDate !== todayStr) {
@@ -213,18 +245,52 @@
                         });
                     }
                 });
-                set(ref(db, 'schoolAttendanceDB'), { store: store, lastDate: todayStr });
+                set(ref(db, 'schoolAttendanceDB'), { store: store, pin: setupPin, lastDate: todayStr });
             }
         } else {
             store = {};
+            setupPin = "";
         }
 
+        checkLockState();
         window.autoFillAttendance();
         let activePanel = document.querySelector('.panel.active-panel');
         if (activePanel && activePanel.id === 'panel3') {
             window.renderReport();
         }
     });
+
+    function checkLockState() {
+        if(setupPin) {
+            document.getElementById('lockScreen').style.display = 'block';
+            document.getElementById('setupForm').style.display = 'none';
+        } else {
+            document.getElementById('lockScreen').style.display = 'none';
+            document.getElementById('setupForm').style.display = 'block';
+        }
+    }
+
+    window.unlockSetup = function() {
+        let pinVal = document.getElementById('inputPin').value;
+        if(pinVal === setupPin) {
+            document.getElementById('lockScreen').style.display = 'none';
+            document.getElementById('setupForm').style.display = 'block';
+            document.getElementById('inputPin').value = '';
+        } else {
+            alert("ખોટો PIN દાખલ કર્યો છે!");
+        }
+    };
+
+    window.savePin = function() {
+        let newPin = document.getElementById('setPin').value;
+        if(!newPin) return alert("કૃપા કરીને પિન લખો");
+        setupPin = newPin;
+        set(ref(db, 'schoolAttendanceDB'), { store: store, pin: setupPin, lastDate: todayStr }).then(() => {
+            showMsg("લોક PIN સફળતાપૂર્વક સેટ થયો.", false);
+            document.getElementById('setPin').value = '';
+            checkLockState();
+        });
+    };
 
     window.autoFillAttendance = function() {
         let cls = document.getElementById('dayClass').value;
@@ -251,6 +317,18 @@
                 document.getElementById('mg_'+c).value = '';
             });
         }
+        window.calcLiveTotals();
+    };
+
+    window.calcLiveTotals = function() {
+        const cats = ['sc', 'st', 'obc', 'gen'];
+        let attTot = 0, mealTot = 0;
+        cats.forEach(c => {
+            attTot += (parseInt(document.getElementById('ab_'+c).value) || 0) + (parseInt(document.getElementById('ag_'+c).value) || 0);
+            mealTot += (parseInt(document.getElementById('mb_'+c).value) || 0) + (parseInt(document.getElementById('mg_'+c).value) || 0);
+        });
+        document.getElementById('classAttTotal').innerText = attTot;
+        document.getElementById('classMealTotal').innerText = mealTot;
     };
 
     function showMsg(text, isError) {
@@ -294,6 +372,7 @@
 
         set(ref(db, 'schoolAttendanceDB'), {
             store: store,
+            pin: setupPin,
             lastDate: todayStr
         }).then(() => {
             showMsg(cls + " ડેટા સર્વર પર સફળતાપૂર્વક સેવ થયો.", false);
@@ -305,36 +384,85 @@
     window.renderReport = function() {
         document.getElementById('curDate').innerText = new Date().toLocaleDateString('gu-IN');
         let html = '';
-        let gt = { rb:0, rg:0, ab:0, ag:0, mb:0, mg:0 };
-
-        classes.forEach(cls => {
-            let d = store[cls] || {};
-            const sum = (p) => (d[p+'_sc']||0)+(d[p+'_st']||0)+(d[p+'_obc']||0)+(d[p+'_gen']||0);
-            let rb = sum('rb'), rg = sum('rg'), ab = sum('ab'), ag = sum('ag'), mb = sum('mb'), mg = sum('mg');
-
-            html += `<tr>
-                <td><b>${cls}</b></td>
-                <td>${d.rb_sc||0}</td><td>${d.rg_sc||0}</td><td>${d.rb_st||0}</td><td>${d.rg_st||0}</td><td>${d.rb_obc||0}</td><td>${d.rg_obc||0}</td><td>${d.rb_gen||0}</td><td>${d.rg_gen||0}</td><td class="total-bg">${rb}</td><td class="total-bg">${rg}</td><td class="total-bg">${rb+rg}</td>
-                <td>${d.ab_sc||0}</td><td>${d.ag_sc||0}</td><td>${d.ab_st||0}</td><td>${d.ag_st||0}</td><td>${d.ab_obc||0}</td><td>${d.ag_obc||0}</td><td>${d.ab_gen||0}</td><td>${d.ag_gen||0}</td><td class="total-bg">${ab}</td><td class="total-bg">${ag}</td><td class="total-bg">${ab+ag}</td>
-                <td>${d.mb_sc||0}</td><td>${d.mg_sc||0}</td><td>${d.mb_st||0}</td><td>${d.mg_st||0}</td><td>${d.mb_obc||0}</td><td>${d.mg_obc||0}</td><td>${d.mb_gen||0}</td><td>${d.mg_gen||0}</td><td class="total-bg">${mb}</td><td class="total-bg">${mg}</td><td class="total-bg">${mb+mg}</td>
-                <td></td>
-            </tr>`;
-            gt.rb += rb; gt.rg += rg; gt.ab += ab; gt.ag += ag; gt.mb += mb; gt.mg += mg;
+        
+        let initTotals = () => ({
+            rb_sc:0, rg_sc:0, rb_st:0, rg_st:0, rb_obc:0, rg_obc:0, rb_gen:0, rg_gen:0,
+            ab_sc:0, ag_sc:0, ab_st:0, ag_st:0, ab_obc:0, ag_obc:0, ab_gen:0, ag_gen:0,
+            mb_sc:0, mg_sc:0, mb_st:0, mg_st:0, mb_obc:0, mg_obc:0, mb_gen:0, mg_gen:0
         });
 
+        let pTot = initTotals();
+        let uTot = initTotals();
+
+        function renderRows(classList, totObj) {
+            classList.forEach(cls => {
+                let d = store[cls] || {};
+                const cats = ['sc', 'st', 'obc', 'gen'];
+                cats.forEach(c => {
+                    totObj['rb_'+c] += (d['rb_'+c]||0); totObj['rg_'+c] += (d['rg_'+c]||0);
+                    totObj['ab_'+c] += (d['ab_'+c]||0); totObj['ag_'+c] += (d['ag_'+c]||0);
+                    totObj['mb_'+c] += (d['mb_'+c]||0); totObj['mg_'+c] += (d['mg_'+c]||0);
+                });
+
+                const sum = (p) => (d[p+'_sc']||0)+(d[p+'_st']||0)+(d[p+'_obc']||0)+(d[p+'_gen']||0);
+                let rb = sum('rb'), rg = sum('rg'), ab = sum('ab'), ag = sum('ag'), mb = sum('mb'), mg = sum('mg');
+
+                html += `<tr>
+                    <td><b>${cls}</b></td>
+                    <td>${d.rb_sc||0}</td><td>${d.rg_sc||0}</td><td>${d.rb_st||0}</td><td>${d.rg_st||0}</td><td>${d.rb_obc||0}</td><td>${d.rg_obc||0}</td><td>${d.rb_gen||0}</td><td>${d.rg_gen||0}</td><td class="total-bg">${rb}</td><td class="total-bg">${rg}</td><td class="total-bg">${rb+rg}</td>
+                    <td>${d.ab_sc||0}</td><td>${d.ag_sc||0}</td><td>${d.ab_st||0}</td><td>${d.ag_st||0}</td><td>${d.ab_obc||0}</td><td>${d.ag_obc||0}</td><td>${d.ab_gen||0}</td><td>${d.ag_gen||0}</td><td class="total-bg">${ab}</td><td class="total-bg">${ag}</td><td class="total-bg">${ab+ag}</td>
+                    <td>${d.mb_sc||0}</td><td>${d.mg_sc||0}</td><td>${d.mb_st||0}</td><td>${d.mg_st||0}</td><td>${d.mb_obc||0}</td><td>${d.mg_obc||0}</td><td>${d.mb_gen||0}</td><td>${d.mg_gen||0}</td><td class="total-bg">${mb}</td><td class="total-bg">${mg}</td><td class="total-bg">${mb+mg}</td>
+                    <td></td>
+                </tr>`;
+            });
+        }
+
+        function renderSubTotalRow(label, t) {
+            let rb_tot = t.rb_sc+t.rb_st+t.rb_obc+t.rb_gen, rg_tot = t.rg_sc+t.rg_st+t.rg_obc+t.rg_gen;
+            let ab_tot = t.ab_sc+t.ab_st+t.ab_obc+t.ab_gen, ag_tot = t.ag_sc+t.ag_st+t.ag_obc+t.ag_gen;
+            let mb_tot = t.mb_sc+t.mb_st+t.mb_obc+t.mb_gen, mg_tot = t.mg_sc+t.mg_st+t.mg_obc+t.mg_gen;
+
+            return `<tr class="subtotal-row">
+                <td><b>${label}</b></td>
+                <td>${t.rb_sc}</td><td>${t.rg_sc}</td><td>${t.rb_st}</td><td>${t.rg_st}</td><td>${t.rb_obc}</td><td>${t.rg_obc}</td><td>${t.rb_gen}</td><td>${t.rg_gen}</td><td class="total-bg">${rb_tot}</td><td class="total-bg">${rg_tot}</td><td class="total-bg">${rb_tot+rg_tot}</td>
+                <td>${t.ab_sc}</td><td>${t.ag_sc}</td><td>${t.ab_st}</td><td>${t.ag_st}</td><td>${t.ab_obc}</td><td>${t.ag_obc}</td><td>${t.ab_gen}</td><td>${t.ag_gen}</td><td class="total-bg">${ab_tot}</td><td class="total-bg">${ag_tot}</td><td class="total-bg">${ab_tot+ag_tot}</td>
+                <td>${t.mb_sc}</td><td>${t.mg_sc}</td><td>${t.mb_st}</td><td>${t.mg_st}</td><td>${t.mb_obc}</td><td>${t.mg_obc}</td><td>${t.mb_gen}</td><td>${t.mg_gen}</td><td class="total-bg">${mb_tot}</td><td class="total-bg">${mg_tot}</td><td class="total-bg">${mb_tot+mg_tot}</td>
+                <td></td>
+            </tr>`;
+        }
+
+        // 1. બાલવાટિકા થી 5
+        renderRows(classesPrimary, pTot);
+        html += renderSubTotalRow("કુલ (બાલવાટિકા-૫)", pTot);
+
+        // 2. 6A થી 8B
+        renderRows(classesUpper, uTot);
+        html += renderSubTotalRow("કુલ (૬A-૮B)", uTot);
+
+        // 3. ગ્રાન્ડ ટોટલ (બાલવાટિકા થી ૮B)
+        let gTot = initTotals();
+        Object.keys(gTot).forEach(k => gTot[k] = pTot[k] + uTot[k]);
+        
+        let grb = gTot.rb_sc+gTot.rb_st+gTot.rb_obc+gTot.rb_gen, grg = gTot.rg_sc+gTot.rg_st+gTot.rg_obc+gTot.rg_gen;
+        let gab = gTot.ab_sc+gTot.ab_st+gTot.ab_obc+gTot.ab_gen, gag = gTot.ag_sc+gTot.ag_st+gTot.ag_obc+gTot.ag_gen;
+        let gmb = gTot.mb_sc+gTot.mb_st+gTot.mb_obc+gTot.mb_gen, gmg = gTot.mg_sc+gTot.mg_st+gTot.mg_obc+gTot.mg_gen;
+
         html += `<tr class="grand-total">
-            <td>કુલ</td><td colspan="8">સરવાળો</td><td>${gt.rb}</td><td>${gt.rg}</td><td>${gt.rb+gt.rg}</td>
-            <td colspan="8">--</td><td>${gt.ab}</td><td>${gt.ag}</td><td>${gt.ab+gt.ag}</td>
-            <td colspan="8">--</td><td>${gt.mb}</td><td>${gt.mg}</td><td>${gt.mb+gt.mg}</td>
+            <td><b>કુલ (બાલવાટિકા-૮B)</b></td>
+            <td>${gTot.rb_sc}</td><td>${gTot.rg_sc}</td><td>${gTot.rb_st}</td><td>${gTot.rg_st}</td><td>${gTot.rb_obc}</td><td>${gTot.rg_obc}</td><td>${gTot.rb_gen}</td><td>${gTot.rg_gen}</td><td class="total-bg">${grb}</td><td class="total-bg">${grg}</td><td class="total-bg">${grb+grg}</td>
+            <td>${gTot.ab_sc}</td><td>${gTot.ag_sc}</td><td>${gTot.ab_st}</td><td>${gTot.ag_st}</td><td>${gTot.ab_obc}</td><td>${gTot.ag_obc}</td><td>${gTot.ab_gen}</td><td>${gTot.ag_gen}</td><td class="total-bg">${gab}</td><td class="total-bg">${gag}</td><td class="total-bg">${gab+gag}</td>
+            <td>${gTot.mb_sc}</td><td>${gTot.mg_sc}</td><td>${gTot.mb_st}</td><td>${gTot.mg_st}</td><td>${gTot.mb_obc}</td><td>${gTot.mg_obc}</td><td>${gTot.mb_gen}</td><td>${gTot.mg_gen}</td><td class="total-bg">${gmb}</td><td class="total-bg">${gmg}</td><td class="total-bg">${gmb+gmg}</td>
             <td></td>
         </tr>`;
+
         document.getElementById('reportContent').innerHTML = html;
     };
 
     window.resetAll = function() {
-        if(confirm("શું તમે ખરેખર બધો ડેટા સાફ કરવા માંગો છો? આનાથી ઓનલાઈન સર્વર ડેટા પણ ડીલીટ થઈ જશે.")) {
+        if(confirm("શું તમે ખરેખર બધો ડેટા અને PIN સાફ કરવા માંગો છો?")) {
             remove(ref(db, 'schoolAttendanceDB')).then(() => {
                 store = {};
+                setupPin = "";
                 alert("બધો ડેટા સર્વર પરથી સાફ થઈ ગયો છે.");
                 location.reload();
             });
